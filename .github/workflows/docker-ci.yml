@@ -1,0 +1,45 @@
+name: Node.js Docker CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2. Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      # 3. Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # 4. Run Node.js script
+      - name: Run Node.js script
+        run: node index.js
+
+      # 5. Login to DockerHub using GitHub Secrets
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          #username: ${{ secrets.DOCKER_USERNAME }}
+          #password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # 6. Build Docker image
+      - name: Build Docker image
+        run: docker build -t mubeentahir12345/midterm:latest .
+
+      # 7. Push Docker image to DockerHub
+      - name: Push Docker image
+        run: docker push mubeentahir12345/midterm:latest
