@@ -6,12 +6,12 @@ on:
       - main
 
 jobs:
-  push-node-image:
+  push-image:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout your code
-      - name: Checkout repository
+      # 1️⃣ Checkout repo
+      - name: Checkout code
         uses: actions/checkout@v3
 
       # 2️⃣ Login to Docker Hub
@@ -22,17 +22,18 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       # 3️⃣ Pull Node.js base image
-      - name: Pull Node.js image
+      - name: Pull Node.js base image
         run: docker pull node:18
 
-      # 4️⃣ Create a container from Node.js image, copy app code, commit as new image
-      - name: Build Node.js app image
+      # 4️⃣ Create container and copy your Node.js app
+      - name: Build image with Node.js app
         run: |
-          CONTAINER_ID=$(docker create node:18)
-          docker cp . $CONTAINER_ID:/app
-          docker commit $CONTAINER_ID ${{ secrets.DOCKER_USERNAME }}/workflow:latest
-          docker rm $CONTAINER_ID
+          docker run --name temp-node -d node:18 tail -f /dev/null
+          docker cp . temp-node:/app
+          docker exec temp-node bash -c "cd /app && npm install"
+          docker commit temp-node ${{ secrets.DOCKER_USERNAME }}/workflow:latest
+          docker stop temp-node
 
-      # 5️⃣ Push the new image to Docker Hub
-      - name: Push image to Docker Hub
+      # 5️⃣ Push image to Docker Hub
+      - name: Push image
         run: docker push ${{ secrets.DOCKER_USERNAME }}/workflow:latest
